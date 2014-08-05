@@ -1,0 +1,20 @@
+{
+  "name": "mulesoft-pi",
+  "description": "Mulesoft hackathon",
+  "version": "0.0.1",
+  "keywords": [
+    "pi",
+    "raspberry"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nalnaji/pi.git"
+  },
+  "dependencies": {
+    "express": "~4.7.4",
+    "pi-gpio": "0.0.6",
+    "python-shell": "0.0.3",
+    "sleep": "^1.1.8"
+  },
+  "devDependencies": {}
+}
