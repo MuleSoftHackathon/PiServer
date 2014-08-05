@@ -25,8 +25,9 @@ app.get('/setupMotionHook', function (req, res) {
   var list = JSON.parse(fs.readFileSync('motionIPList.txt'));
   if(!list.hasOwnProperty(address)){
      
-      if(err) throw err;
-      child = exec("nohup sudo python python/waitForMotion.py " +address+" &", function (error, stdout, stderr){
+      
+      child = exec("nohup sudo python python/waitForMotion.py " +address+" &", function (err, stdout, stderr){
+          if(err) throw err;
           res.send('SET UP AT PORT: ' +  address);
           fs.writeFile('motionIPList.txt',JSON.stringify(list),function(err){
               list[address] = child.pid;
