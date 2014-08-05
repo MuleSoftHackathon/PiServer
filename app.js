@@ -20,16 +20,20 @@ app.get('/ranger_sensor', function (req, res) {
 });
 app.get('/setupMotionHook', function (req, res) {
   var address = req.query.address;
-  var port = req.query.port;
+  var child;
+
   var list = JSON.parse(readFileSync('motionIPList.txt'));
   if(!list.hasOwnProperty(address)){
-     list[address] = port;
-     fs.writeFile('motionIPList.txt',JSON.stringify(list),function(err){
-        if(err) throw err;
-        exec("nohup python python/waitForMotion.py " +address+" &", function (error, stdout, stderr){
+     
+      if(err) throw err;
+      child = exec("nohup sudo python python/waitForMotion.py " +address+" &", function (error, stdout, stderr){
           res.send('SET UP AT PORT: ' +  address);
-        });
-     });
+          fs.writeFile('motionIPList.txt',JSON.stringify(list),function(err){
+              list[address] = child.pid;
+              res.send('success');
+          });
+      });
+     
   }
   else{
     res.send('Already running script');
@@ -38,16 +42,17 @@ app.get('/setupMotionHook', function (req, res) {
 
 app.get('/removeMotionHook', function (req, res) {
   var address = req.query.address;
-  var port = req.query.port;
+  
   var list = JSON.parse(readFileSync('motionIPList.txt'));
   if(list.hasOwnProperty(address)){
-     delete list[address];
-     fs.writeFile('motionIPList.txt',JSON.stringify(list),function(err){
-        if(err) throw err;
-        exec("nohup python python/waitForMotion.py " +address+" &", function (error, stdout, stderr){
-          res.send('SET UP AT PORT: ' +  address);
+    exec("sudo kill " + list[address], function (error, stdout, stderr){
+        delete list[address];
+        fs.writeFile('motionIPList.txt',JSON.stringify(list),function(err){
+            if(err) throw err;
+          
+              res.send('deleted');
         });
-     });
+    });
   }
   else{
     res.send('Script not running');
