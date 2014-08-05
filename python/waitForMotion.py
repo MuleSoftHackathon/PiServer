@@ -9,10 +9,12 @@ INF = 4
 GPIO.setup(INF,GPIO.IN)
 
 while True:
+	#When the infrared sensor goes off...
 	if GPIO.input(INF)==1:
 		print 'MOTION FOUND'
 		#10.250.1.58:8880
 		try:
+			#Send an alert to the desired port
 			conn = httplib.HTTPConnection(sys.argv[1])
 
 			conn.request("GET", "/motion_detected")
