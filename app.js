@@ -26,7 +26,7 @@ app.get('/setupMotionHook', function (req, res) {
   if(!list.hasOwnProperty(address)){
      
       console.log('Starting execution!');
-      child = exec("nohup sudo python python/waitForMotion.py " +address+" &", function (err, stdout, stderr){
+      child = exec("nohup sudo python python/waitForMotion.py " +address+" & poop", function (err, stdout, stderr){
           console.log('Finished execution!');
           if(err) throw err;
           console.log('Starting writeFile!');
