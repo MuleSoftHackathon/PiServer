@@ -20,13 +20,13 @@ app.get('/ranger_sensor', function (req, res) {
   });
 });
 app.get('/setupMotionHook', function (req, res) {
-  var address = req.query.address;
+  var address = ''+req.query.address;
   var child;
   //MY ADDRESS = 10.250.1.58:8880
   var list = JSON.parse(fs.readFileSync('motionIPList.txt',{encoding: 'utf8'}));
   if(!list.hasOwnProperty(address)){
       console.log('Starting execution!');
-      child = spawn("sudo python python/waitForMotion.py ", [address],{detached: true});
+      child = spawn("sudo python python/waitForMotion.py &", [address],{detached: true});
       console.log('Finished execution!');
       
       console.log('Starting writeFile!');
