@@ -26,7 +26,7 @@ app.get('/setupMotionHook', function (req, res) {
   var list = JSON.parse(fs.readFileSync('motionIPList.txt',{encoding: 'utf8'}));
   if(!list.hasOwnProperty(address)){
       console.log('Starting execution!');
-      child = spawn("sudo python python/waitForMotion.py", [address],{detached: true});
+      child = spawn("sudo python python/waitForMotion.py " + address, [],{detached: true});
       console.log('Finished execution!');
       
       console.log('Starting writeFile!');
