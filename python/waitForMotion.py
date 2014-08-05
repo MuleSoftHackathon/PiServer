@@ -14,10 +14,11 @@ while True:
 		#10.250.1.58:8880
 		try:
 			conn = httplib.HTTPConnection(sys.argv[0])
+
+			conn.request("GET", "/motion_detected")
+			r1 = conn.getresponse()
 		except:
 			print "Error Connecting to port: %s" % sys.argv[0]
-		conn.request("GET", "/motion_detected")
-		r1 = conn.getresponse()
 		time.sleep(1)
 	else:
 		print 'MOTION NOT FOUND'
