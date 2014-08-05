@@ -4,6 +4,7 @@ var gpio = require("pi-gpio");
 var sleep = require('sleep');
 var fs = require('fs');
 var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 var PythonShell = require('python-shell');
 app.listen(8080);
 
