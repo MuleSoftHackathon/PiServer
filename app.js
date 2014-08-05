@@ -20,10 +20,40 @@ app.get('/ranger_sensor', function (req, res) {
 });
 app.get('/setupMotionHook', function (req, res) {
   var address = req.query.address;
-  exec("nohup python python/waitForMotion.py " +address+" &", function (error, stdout, stderr){
-    res.send('SET UP AT PORT: ' +  address);
-  });
+  var port = req.query.port;
+  var list = JSON.parse(readFileSync('motionIPList.txt'));
+  if(!list.hasOwnProperty(address)){
+     list[address] = port;
+     fs.writeFile('motionIPList.txt',JSON.stringify(list),function(err){
+        if(err) throw err;
+        exec("nohup python python/waitForMotion.py " +address+" &", function (error, stdout, stderr){
+          res.send('SET UP AT PORT: ' +  address);
+        });
+     });
+  }
+  else{
+    res.send('Already running script');
+  } 
 });
+
+app.get('/removeMotionHook', function (req, res) {
+  var address = req.query.address;
+  var port = req.query.port;
+  var list = JSON.parse(readFileSync('motionIPList.txt'));
+  if(list.hasOwnProperty(address)){
+     delete list[address];
+     fs.writeFile('motionIPList.txt',JSON.stringify(list),function(err){
+        if(err) throw err;
+        exec("nohup python python/waitForMotion.py " +address+" &", function (error, stdout, stderr){
+          res.send('SET UP AT PORT: ' +  address);
+        });
+     });
+  }
+  else{
+    res.send('Script not running');
+  } 
+});
+
 app.get('/togglelight', function (req, res) {
   var LIGHT = parseInt(req.query.pin);
 
