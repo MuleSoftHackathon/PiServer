@@ -21,8 +21,8 @@ app.get('/ranger_sensor', function (req, res) {
 app.get('/setupMotionHook', function (req, res) {
   var address = req.query.address;
   var child;
-
-  var list = JSON.parse(readFileSync('motionIPList.txt'));
+  //MY ADDRESS = 10.250.1.58:8880
+  var list = JSON.parse(fs.readFileSync('motionIPList.txt'));
   if(!list.hasOwnProperty(address)){
      
       if(err) throw err;
@@ -43,7 +43,7 @@ app.get('/setupMotionHook', function (req, res) {
 app.get('/removeMotionHook', function (req, res) {
   var address = req.query.address;
   
-  var list = JSON.parse(readFileSync('motionIPList.txt'));
+  var list = JSON.parse(fs.readFileSync('motionIPList.txt'));
   if(list.hasOwnProperty(address)){
     exec("sudo kill " + list[address], function (error, stdout, stderr){
         delete list[address];
