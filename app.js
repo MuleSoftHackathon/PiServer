@@ -28,12 +28,12 @@ app.get('/setupMotionHook', function (req, res) {
       console.log('Starting execution!');
       child = spawn("sudo", ['python','python/waitForMotion.py',address],{detached: true});
       console.log('Finished execution!');
-      
+      list[address] = child.pid;
       console.log('Starting writeFile!');
       fs.writeFile('motionIPList.txt',JSON.stringify(list),function(err){
           if(err) throw err;
           console.log('Finished writeFile!');
-          list[address] = child.pid;
+          
           res.send('SET UP AT PORT: ' +  address);
       });
   }
