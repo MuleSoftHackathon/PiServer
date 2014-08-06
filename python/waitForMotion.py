@@ -11,7 +11,6 @@ GPIO.setup(INF,GPIO.IN)
 while True:
 	#When the infrared sensor goes off...
 	if GPIO.input(INF)==1:
-		print 'MOTION FOUND'
 		#10.250.1.58:8880
 		try:
 			#Send an alert to the desired port
@@ -22,8 +21,7 @@ while True:
 		except:
 			print "Error Connecting to port: %s" % sys.argv[1]
 		time.sleep(1)
-	else:
-		print 'MOTION NOT FOUND'
+
 	time.sleep(0.2)
 
 GPIO.cleanup()

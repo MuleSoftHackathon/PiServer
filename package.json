@@ -11,6 +11,7 @@
     "url": "https://github.com/nalnaji/pi.git"
   },
   "dependencies": {
+    "body-parser": "^1.6.0",
     "express": "~4.7.4",
     "pi-gpio": "0.0.6",
     "python-shell": "0.0.3",
