@@ -35,7 +35,7 @@ function registerAPIServer(serverConfig) {
     json: piInfo
   };
 
-  console.log('Register api server');
+  console.log('Register api server %s:%d', serverConfig.host, serverConfig.port);
   request.post(
     options,
     function (error, response, body) {
@@ -49,6 +49,7 @@ function registerAPIServer(serverConfig) {
 }
 
 var getRangeSensorData = function(req, res) {
+  console.log('Get range sensor data');
   pyShell.run('measure.py', function (err, results) {
     if (err) throw err;
     var result = {
