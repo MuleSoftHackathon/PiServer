@@ -9,6 +9,6 @@ app.listen(8880);
 app.get('/motion_detected', function (req, res) {
 
   console.log('MOTION DETECTED');
-  res.send(null);
+  res.json({message: 'ok'});
 });
 

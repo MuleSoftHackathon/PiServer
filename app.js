@@ -1,5 +1,6 @@
 // Include node modules
 var fs         = require('fs');
+var request    = require('request');
 var gpio       = require('pi-gpio');
 var sleep      = require('sleep');
 var pyShell    = require('python-shell');
@@ -11,6 +12,7 @@ var bodyParser = require('body-parser');
 // Global vaiables
 var app = express();
 var webHookMapping = {};
+var PI_PORT = 8080;
 
 function makeResponse(message, data) {
   data = data || [];
@@ -19,6 +21,31 @@ function makeResponse(message, data) {
   res.message = message;
   res.data = data;
   return res;
+}
+
+function registerAPIServer(serverConfig) {
+  var url = 'http://' + serverConfig.host + ':' + serverConfig.port + serverConfig.endpoint;
+  var piInfo = {
+    device_id: 'pipipi',
+    device_type: 'pi',
+    port: PI_PORT
+  };
+  var options = {
+    url: url,
+    json: piInfo
+  };
+
+  console.log('Register api server');
+  request.post(
+    options,
+    function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log('Registered successfully');
+      } else {
+        console.log('Error occured %s', response.statusCode);
+      }
+    }
+  );
 }
 
 var getRangeSensorData = function(req, res) {
@@ -102,5 +129,13 @@ app.route('/ranger_sensor')
 app.route('/toggleIOPin')
 .get(toggleIOPin);
 
-app.listen(8080);
+fs.readFile('apiserver.config', 'utf8', function (err, data) {
+  if (err) {
+    return console.log(err);
+  }
+  var serverConfig = JSON.parse(data);
+  registerAPIServer(serverConfig);
+});
+
+app.listen(PI_PORT);
 console.log('Pi Server up and running..');

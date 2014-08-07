@@ -15,6 +15,7 @@
     "express": "~4.7.4",
     "pi-gpio": "0.0.6",
     "python-shell": "0.0.3",
+    "request": "^2.40.0",
     "sleep": "^1.1.8"
   },
   "devDependencies": {}
