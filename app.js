@@ -1,7 +1,7 @@
 // Include node modules
 var fs         = require('fs');
 var request    = require('request');
-var gpio       = require('pi-gpio');
+//var gpio       = require('pi-gpio');
 var sleep      = require('sleep');
 var pyShell    = require('python-shell');
 var express    = require('express');
@@ -14,8 +14,8 @@ var app    = express();
 var router = express.Router();
 
 var webHookMapping = {};
-var PI_PORT = 8080;
-var PI_DEVICE_ID = 'pipipi';
+var PI_DEVICE_ID;
+var PI_PORT;
 
 function makeResponse(message, data) {
   data = data || [];
@@ -125,7 +125,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // simple logger for this router's requests
-// all requests to this router will first hit this middleware
 router.use(function(req, res, next) {
   console.log('------\n%s %s from %s', req.method, req.url, req.hostname);
   next();
@@ -136,22 +135,25 @@ router.route('/motionHook')
 .post(setupMotionHook)
 .delete(removeMotionHook);
 
-router.route('/ranger_sensor')
+router.route('/rangeSensor')
 .get(getRangeSensorData);
 
 router.route('/toggleIOPin')
 .get(toggleIOPin);
 
+app.all('*', router);
+
 // load api server config file
-fs.readFile('apiserver.config', 'utf8', function (err, data) {
+fs.readFile('pi.config', 'utf8', function (err, data) {
   if (err) {
     return console.log(err);
   }
-  var serverConfig = JSON.parse(data);
-  registerAPIServer(serverConfig);
-});
+  var config = JSON.parse(data);
+  registerAPIServer(config.apiServer);
+  PI_PORT = config.port || 8080;
+  PI_DEVICE_ID = config.deviceIDSeed;
 
-// Start the server
-app.all('*', router);
-app.listen(PI_PORT);
-console.log('Pi Server up and running on port %d', PI_PORT);
+  // Start the server
+  app.listen(PI_PORT);
+  console.log('Pi Server up and running on port %d', PI_PORT);
+});
