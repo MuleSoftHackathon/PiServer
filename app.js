@@ -66,8 +66,8 @@ var setupMotionHook =  function(req, res) {
   var address = String(req.body.address);
   var child;
 
+  console.log('Adding new motion hook (' + address + ')');  
   if (!webHookMapping.hasOwnProperty(address)) {
-    console.log('Starting script (' + address + ')');
     child = spawn('sudo', ['python', 'python/waitForMotion.py', address], { detached: true });
     console.log('Script started successfully!');
 
