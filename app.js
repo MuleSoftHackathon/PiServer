@@ -10,9 +10,12 @@ var spawn      = require('child_process').spawn;
 var bodyParser = require('body-parser');
 
 // Global vaiables
-var app = express();
+var app    = express();
+var router = express.Router();
+
 var webHookMapping = {};
 var PI_PORT = 8080;
+var PI_DEVICE_ID = 'pipipi';
 
 function makeResponse(message, data) {
   data = data || [];
@@ -26,7 +29,7 @@ function makeResponse(message, data) {
 function registerAPIServer(serverConfig) {
   var url = 'http://' + serverConfig.host + ':' + serverConfig.port + serverConfig.endpoint;
   var piInfo = {
-    device_id: 'pipipi',
+    device_id: PI_DEVICE_ID,
     device_type: 'pi',
     port: PI_PORT
   };
@@ -35,21 +38,20 @@ function registerAPIServer(serverConfig) {
     json: piInfo
   };
 
-  console.log('Register api server %s:%d', serverConfig.host, serverConfig.port);
+  console.log('Register ourselves to APIServer@%s:%d', serverConfig.host, serverConfig.port);
   request.post(
     options,
     function (error, response, body) {
       if (!error && response.statusCode == 200) {
         console.log('Registered successfully');
       } else {
-        console.log('Error occured %s', response.statusCode);
+        console.log('Error occured %s: %s', response.statusCode, body.message ? body.message : '');
       }
     }
   );
 }
 
 var getRangeSensorData = function(req, res) {
-  console.log('Get range sensor data');
   pyShell.run('measure.py', function (err, results) {
     if (err) throw err;
     var result = {
@@ -66,16 +68,17 @@ var setupMotionHook =  function(req, res) {
   var address = String(req.body.address);
   var child;
 
-  console.log('Adding new motion hook (' + address + ')');  
+  console.log('Adding new motion hook (' + address + ')');
   if (!webHookMapping.hasOwnProperty(address)) {
     child = spawn('sudo', ['python', 'python/waitForMotion.py', address], { detached: true });
     console.log('Script started successfully!');
 
     webHookMapping[address] = child.pid;
-    res.status(201).json(makeResponse('SET UP AT PORT: ' +  address));
+    res.status(201).json(makeResponse('Set up hook for ' +  address));
   }
   else{
-    res.status(400).json(makeResponse('Already running script for ' + address));
+    console.log('Ignored duplicate request');
+    res.status(400).json(makeResponse('Hook already set up for ' + address));
   }
 };
 
@@ -83,15 +86,16 @@ var removeMotionHook = function(req, res) {
   var address = String(req.body.address);
 
   if (webHookMapping.hasOwnProperty(address)) {
-    console.log('Killing web hook for ' + address);
+    console.log('Killing motion hook for ' + address);
     exec('sudo kill ' + webHookMapping[address], function (error, stdout, stderr){
       delete webHookMapping[address];
 
-      console.log('Killed (' + address + ')');
-      res.status(200).json(makeResponse('deleted'));
+      console.log('Killed motion hook ' + address);
+      res.status(200).json(makeResponse('Deleted'));
     });
   } else {
-    res.status(400).json(makeResponse('Script not running'));
+    console.log('Hook to delete not found:' + address);
+    res.status(400).json(makeResponse('Motion hook was never set up'));
   }
 };
 
@@ -120,16 +124,25 @@ var toggleIOPin = function(req, res) {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.route('/motionHook')
+// simple logger for this router's requests
+// all requests to this router will first hit this middleware
+router.use(function(req, res, next) {
+  console.log('------\n%s %s from %s', req.method, req.url, req.hostname);
+  next();
+});
+
+// Routes
+router.route('/motionHook')
 .post(setupMotionHook)
 .delete(removeMotionHook);
 
-app.route('/ranger_sensor')
+router.route('/ranger_sensor')
 .get(getRangeSensorData);
 
-app.route('/toggleIOPin')
+router.route('/toggleIOPin')
 .get(toggleIOPin);
 
+// load api server config file
 fs.readFile('apiserver.config', 'utf8', function (err, data) {
   if (err) {
     return console.log(err);
@@ -138,5 +151,7 @@ fs.readFile('apiserver.config', 'utf8', function (err, data) {
   registerAPIServer(serverConfig);
 });
 
+// Start the server
+app.all('*', router);
 app.listen(PI_PORT);
-console.log('Pi Server up and running..');
+console.log('Pi Server up and running on port %d', PI_PORT);
