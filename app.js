@@ -148,10 +148,11 @@ fs.readFile('pi.config', 'utf8', function (err, data) {
   if (err) {
     return console.log(err);
   }
+
   var config = JSON.parse(data);
-  registerAPIServer(config.apiServer);
   PI_PORT = config.port || 8080;
   PI_DEVICE_ID = config.deviceIDSeed;
+  registerAPIServer(config.apiServer);
 
   // Start the server
   app.listen(PI_PORT);
