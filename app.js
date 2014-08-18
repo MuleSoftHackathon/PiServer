@@ -9,6 +9,8 @@ var exec       = require('child_process').exec;
 var spawn      = require('child_process').spawn;
 var bodyParser = require('body-parser');
 
+var processQueue = [];
+var processCount = 0;
 // Global vaiables
 var app    = express();
 var router = express.Router();
@@ -52,6 +54,13 @@ function registerAPIServer(serverConfig) {
 }
 
 var getRangeSensorData = function(req, res) {
+  var id = processCount;
+  processCount++;
+  
+  processQueue.push(id);
+  
+  while(processQueue[0] != id){}
+
   pyShell.run('measure.py', function (err, results) {
     if (err) throw err;
     var result = {
@@ -59,6 +68,7 @@ var getRangeSensorData = function(req, res) {
       distanceInInches: parseFloat(results[0]) * 0.393701,
       distanceInMeters: parseFloat(results[0]) / 100
     };
+    processQueue.shift();
     res.json(makeResponse('success', result));
   });
 };
