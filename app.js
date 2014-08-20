@@ -19,13 +19,15 @@ var webHookMapping = {};
 var PI_DEVICE_ID;
 var PI_PORT;
 
-function makeResponse(message, data) {
-  data = data || [];
-  var res = {};
+function makeResponse(message, data, status) {
+  data    = data || [];
+  status  = status || 'ok';
 
-  res.message = message;
-  res.data = data;
-  return res;
+  return {
+    data: data,
+    message: message,
+    status: status
+  };
 }
 
 function registerAPIServer(serverConfig) {
@@ -56,24 +58,23 @@ function registerAPIServer(serverConfig) {
 var getRangeSensorData = function(req, res) {
   var id = processCount;
   processCount++;
-  
+
   processQueue.push(id);
-  
+
   while(processQueue[0] != id){}
 
+  console.log('Read range sensor data');
   pyShell.run('measure.py', function (err, results) {
     if (err) throw err;
     var result = {
-      distanceInCm: parseFloat(results[0]),
-      distanceInInches: parseFloat(results[0]) * 0.393701,
-      distanceInMeters: parseFloat(results[0]) / 100
+      distanceCm: parseFloat(results[0]),
+      distanceInches: parseFloat(results[0]) * 0.393701,
     };
     processQueue.shift();
-    res.json(makeResponse('success', result));
+    res.json(makeResponse('Success', result));
   });
 };
 
-//MY ADDRESS = 10.250.1.58:8880
 var setupMotionHook =  function(req, res) {
   var address = String(req.body.address);
   var child;
@@ -84,11 +85,11 @@ var setupMotionHook =  function(req, res) {
     console.log('Script started successfully!');
 
     webHookMapping[address] = child.pid;
-    res.status(201).json(makeResponse('Set up hook for ' +  address));
+    res.json(makeResponse('Registered', {'address': address}));
   }
   else{
     console.log('Ignored duplicate request');
-    res.status(400).json(makeResponse('Hook already set up for ' + address));
+    res.status(400).json(makeResponse('Hook already set', {'address': address}, 'error'));
   }
 };
 
@@ -101,34 +102,52 @@ var removeMotionHook = function(req, res) {
       delete webHookMapping[address];
 
       console.log('Killed motion hook ' + address);
-      res.status(200).json(makeResponse('Deleted'));
+      res.json(makeResponse('Deleted', {'address': address}));
     });
   } else {
     console.log('Hook to delete not found:' + address);
-    res.status(400).json(makeResponse('Motion hook was never set up'));
+    res.status(400).json(makeResponse('Hook not registered', {'address': address}, 'error'));
   }
 };
 
+var getGPIOValue = function(req, res) {
+  var pinNumber = parseInt(req.params.gpioNumber);
+  var pinPath   = '/sys/devices/virtual/gpio/gpio' + pinNumber + '/value';
+  var value     = parseInt(fs.readFileSync(pinPath, {encoding: 'utf8'}).charAt(0));
+
+  console.log('Read GPIO%d: %d', pinNumber, value);
+  res.json(makeResponse('Success', {'value': value}));
+};
+
+var setGPIOValue = function(req, res) {
+  var pinNumber = parseInt(req.params.gpioNumber);
+  var value     = parseInt(req.body.value);
+  var pinPath   = '/sys/devices/virtual/gpio/gpio' + pinNumber + '/value';
+
+  console.log('Set GPIO%d to %d', pinNumber, value);
+  gpio.write(pinNumber, value, function(err){
+    if (err) {
+      res.status(500).json(makeResponse(err.message, [], 'error'));
+    } else {
+      res.json(makeResponse('Success', {'value': value}));
+    }
+  });
+};
+
 var toggleIOPin = function(req, res) {
-  var pinNumber = parseInt(req.query.pin);
+  var pinNumber = parseInt(req.params.gpioNumber);
   var pinPath   = '/sys/devices/virtual/gpio/gpio' + pinNumber + '/value';
   var status    = fs.readFileSync(pinPath, {encoding: 'utf8'}).charAt(0);
-  var message;
+  var value     = status === '0' ? 1 : 0;
 
-  if (status === '0'){
-    gpio.write(pinNumber, 1, function(err){
-      if (err) throw err;
-      message = 'Turned pin on';
-    });
-  } else {
-    gpio.write(pinNumber, 0, function(err){
-      if (err) throw err;
-      message = 'Turned pin off';
-    });
-  }
-
-  console.log(message);
-  res.status(200).json(makeResponse(message));
+  console.log('Set GPIO%d to %d', pinNumber, value);
+  gpio.write(pinNumber, 0, function(err){
+    if (err) {
+      res.status(500).json(makeResponse(err.message, [], 'error'));
+    } else {
+      res.json(makeResponse('Success', {'value': value}));
+    }
+  });
 };
 
 app.use(bodyParser.json());
@@ -148,7 +167,11 @@ router.route('/motionHook')
 router.route('/rangeSensor')
 .get(getRangeSensorData);
 
-router.route('/toggleIOPin')
+router.route('/gpio/:gpioNumber')
+.get(getGPIOValue)
+.post(setGPIOValue);
+
+router.route('/gpio/:gpioNumber/toggle')
 .get(toggleIOPin);
 
 app.all('*', router);
