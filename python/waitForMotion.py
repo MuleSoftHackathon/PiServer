@@ -4,7 +4,7 @@ import httplib
 import sys
 GPIO.setmode(GPIO.BCM)
 
-INF = 4
+INF = 25
 
 GPIO.setup(INF,GPIO.IN)
 
