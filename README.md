@@ -78,3 +78,19 @@ Remove a web hook for the motion sensor on the raspberry.
 Parameters:
 - `address` : A http address of the web hook you want to remove.
   - Eg. `address=http://127.0.0.1/callback`
+
+Hardware Setup Guides
+=====================
+
+### Range Sensor
+
+- Guide: [https://www.modmypi.com/blog/hc-sr04-ultrasonic-range-sensor-on-the-raspberry-pi](https://www.modmypi.com/blog/hc-sr04-ultrasonic-range-sensor-on-the-raspberry-pi)
+- Pins:
+  - TRIG = GPIO8
+  - ECHO = GPIO7
+
+### Motion Sensor
+
+- Guide [https://www.modmypi.com/blog/raspberry-pi-gpio-sensing-motion-detection](https://www.modmypi.com/blog/raspberry-pi-gpio-sensing-motion-detection)
+- Pins
+  - OUT = GPIO25
