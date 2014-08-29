@@ -19,7 +19,7 @@ Next, clone this repository and install all the dependencies:
 
 ```bash
 cd #move to home directory
-git clone https://github.com/MuleSoftHackathon/PiServer.git
+git clone https://github.com/MuleSoftHackathon/pi.git
 cd PiServer
 npm install
 ```

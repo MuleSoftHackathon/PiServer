@@ -1,5 +1,8 @@
 #!/bin/sh
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+cd /home/pi/pi
 sudo /usr/local/bin/node /home/pi/pi/app.js &
+echo "pi server started" > /home/pi/log
+
 exit 0
