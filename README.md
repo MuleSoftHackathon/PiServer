@@ -17,7 +17,10 @@ node -v    #check if node is installed successfully
 
 Next, clone this repository and install all the dependencies:
 
-```
+```bash
+cd #move to home directory
+git clone https://github.com/MuleSoftHackathon/PiServer.git
+cd PiServer
 npm install
 ```
 
@@ -25,11 +28,11 @@ Modify settings in pi.config if you need to, and start the server with the
 following command:
 
 ```bash
-sudo node app
+nano pi.config  #modify the config, and put in an disdinct deviceID
+./install.sh
 ```
 
-Note that the server needs to run as super user because it needs permissions
-to perform I/O operations on IO pins.
+Now whenever you boot your pi, the pi server will run automatically in the background.
 
 ## Sensors and APIs
 
