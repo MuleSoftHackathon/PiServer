@@ -1,7 +1,7 @@
 // Include node modules
 var fs         = require('fs');
 var request    = require('request');
-var gpio       = require('pi-gpio');
+var gpio       = {} //require('pi-gpio');
 var sleep      = require('sleep');
 var pyShell    = require('python-shell');
 var express    = require('express');
@@ -16,7 +16,7 @@ var app    = express();
 var router = express.Router();
 
 var webHookMapping = {};
-var PI_DEVICE_ID;
+var PI_DEVICE_ID; // same as access key
 var PI_PORT;
 
 function makeResponse(message, data, status) {
@@ -33,8 +33,8 @@ function makeResponse(message, data, status) {
 function registerAPIServer(serverConfig) {
   var url = 'http://' + serverConfig.host + ':' + serverConfig.port + serverConfig.endpoint;
   var piInfo = {
-    device_id: PI_DEVICE_ID,
-    device_type: 'pi',
+    accessKey: PI_DEVICE_ID,
+    type: 'pi',
     port: PI_PORT
   };
   var options = {
@@ -159,6 +159,23 @@ router.use(function(req, res, next) {
   next();
 });
 
+// check accessKey
+router.use('/motionHook', checkAccessKey);
+router.use('/rangeSensor', checkAccessKey);
+router.use('/gpio', checkAccessKey);
+
+function checkAccessKey(req, res, next) {
+	var reqAccessKey = req.query.accessKey || req.body.accessKey;
+	if(PI_DEVICE_ID != null && PI_DEVICE_ID !== reqAccessKey) {
+		res.status(400).json({
+			message : 'Invalid access key!'
+		});
+		console.log('invalid access key / id.')
+		return;
+	}
+	next();
+}
+
 // Routes
 router.route('/motionHook')
 .post(setupMotionHook)
@@ -184,7 +201,7 @@ fs.readFile('pi.config', 'utf8', function (err, data) {
 
   var config = JSON.parse(data);
   PI_PORT = config.port || 8080;
-  PI_DEVICE_ID = config.deviceIDSeed;
+  PI_DEVICE_ID = config.accessKey;
   registerAPIServer(config.apiServer);
 
   // Start the server
