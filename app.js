@@ -49,7 +49,7 @@ function registerAPIServer(serverConfig) {
       if (!error && response.statusCode == 200) {
         console.log('Registered successfully');
       } else {
-        console.log('Error occured %s: %s', response.statusCode, body.message ? body.message : '');
+        console.log('Not registered to central server, running locally!');
       }
     }
   );
