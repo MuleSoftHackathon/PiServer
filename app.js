@@ -1,7 +1,7 @@
 // Include node modules
 var fs         = require('fs');
 var request    = require('request');
-var gpio       = {} //require('pi-gpio');
+var gpio       = require('pi-gpio');
 var sleep      = require('sleep');
 var pyShell    = require('python-shell');
 var express    = require('express');
